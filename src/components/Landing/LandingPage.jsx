@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,7 +44,7 @@ const LandingPage = () => {
             
             {/* Desktop Navigation */}
             <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
+              <div className="ml-10 flex items-baseline space-x-4">
                 <button 
                   onClick={() => scrollToSection('features')}
                   className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors duration-300"
@@ -57,20 +58,20 @@ const LandingPage = () => {
                   How It Works
                 </button>
                 <button 
-                  onClick={() => scrollToSection('testimonials')}
-                  className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors duration-300"
-                >
-                  Testimonials
-                </button>
-                <button 
                   onClick={() => scrollToSection('contact')}
                   className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors duration-300"
                 >
                   Contact
                 </button>
-                <button className="bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors duration-300">
-                  Get Started
-                </button>
+                {/* Right side auth actions */}
+                <div className="ml-4 flex items-center gap-3">
+                  <Link to="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                    Login
+                  </Link>
+                  <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors duration-300 shadow-sm">
+                    Sign Up
+                  </Link>
+                </div>
               </div>
             </div>
             
@@ -110,20 +111,25 @@ const LandingPage = () => {
               How It Works
             </button>
             <button 
-              onClick={() => scrollToSection('testimonials')}
-              className="block w-full text-left text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium transition-colors duration-300"
-            >
-              Testimonials
-            </button>
-            <button 
               onClick={() => scrollToSection('contact')}
               className="block w-full text-left text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium transition-colors duration-300"
             >
               Contact
             </button>
-            <button className="block w-full text-left bg-indigo-600 text-white px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-700 transition-colors duration-300">
-              Get Started
-            </button>
+            <Link 
+              to="/login"
+              className="block w-full text-left bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-base font-medium transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Login
+            </Link>
+            <Link 
+              to="/signup"
+              className="block w-full text-left bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-base font-medium transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Sign Up
+            </Link>
           </div>
         </div>
       </nav>
@@ -291,127 +297,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Trusted by Educators Worldwide
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See how VidyaAI is transforming classrooms and empowering teachers.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-gray-50 p-8 rounded-xl">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-              <p className="text-gray-600 mb-6">
-                "VidyaAI has revolutionized my teaching. I can now create engaging lessons in my students' native language in minutes, not hours. It's like having a teaching assistant that never sleeps!"
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">SM</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-semibold text-gray-900">Sarah M.</p>
-                  <p className="text-gray-600">Primary School Teacher, Mumbai</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-8 rounded-xl">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-              <p className="text-gray-600 mb-6">
-                "The worksheets and visual aids VidyaAI generates are perfect for my multi-grade classroom. My students are more engaged, and I have more time to focus on individual learning needs."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">RK</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-semibold text-gray-900">Rajesh K.</p>
-                  <p className="text-gray-600">Rural School Teacher, Karnataka</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-8 rounded-xl">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-              <p className="text-gray-600 mb-6">
-                "As a teacher with limited resources, VidyaAI has been a game-changer. The low-cost activity suggestions and clear explanations help me deliver quality education to all my students."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">AP</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-semibold text-gray-900">Anita P.</p>
-                  <p className="text-gray-600">Community School Teacher, Delhi</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 bg-indigo-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Trusted by Educators Globally
-            </h2>
-            <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
-              Join thousands of teachers who are transforming their classrooms with VidyaAI.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">10,000+</div>
-              <div className="text-indigo-100">Active Teachers</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">50+</div>
-              <div className="text-indigo-100">Languages Supported</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">1M+</div>
-              <div className="text-indigo-100">Lessons Created</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">95%</div>
-              <div className="text-indigo-100">Teacher Satisfaction</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -422,12 +307,12 @@ const LandingPage = () => {
             Join thousands of educators who are already using VidyaAI to create better learning experiences for their students.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition-colors duration-300 shadow-lg">
-              Start Free Trial
-            </button>
-            <button className="border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-50 transition-colors duration-300">
-              Schedule Demo
-            </button>
+            <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors duration-300 shadow-lg">
+              Get Started Free
+            </Link>
+            <Link to="/login" className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors duration-300">
+              Sign In
+            </Link>
           </div>
         </div>
       </section>
