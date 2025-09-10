@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [headingVisible, setHeadingVisible] = useState(false);
 
   // Handle scroll effects
   useEffect(() => {
@@ -12,6 +13,36 @@ const LandingPage = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Reveal hero heading after initial load
+  useEffect(() => {
+    const timerId = setTimeout(() => setHeadingVisible(true), 500);
+    return () => clearTimeout(timerId);
+  }, []);
+
+  // Animate feature cards on scroll into view
+  useEffect(() => {
+    const cards = document.querySelectorAll('.reveal-card');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('opacity-100', 'translate-y-0');
+            entry.target.classList.remove('opacity-0', 'translate-y-6');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    cards.forEach((card, idx) => {
+      card.style.transitionDelay = `${idx * 100}ms`;
+      observer.observe(card);
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   // Smooth scroll to section
@@ -35,7 +66,7 @@ const LandingPage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-indigo-600">
+                <h1 className="text-3xl md:text-4xl font-bold text-indigo-600">
                   VidyaAI
                 </h1>
               </div>
@@ -129,10 +160,10 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 to-white">
+      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-sky-50 via-sky-100 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight transition-all duration-700 ${headingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
               Your AI Teaching Ally for
               <span className="text-indigo-600 block">Every Classroom</span>
             </h1>
@@ -165,9 +196,9 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
+                <svg className="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
@@ -178,9 +209,9 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -191,9 +222,9 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
+                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-9 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2" />
                 </svg>
               </div>
@@ -204,9 +235,9 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
+                <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -217,8 +248,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 5 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-6">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
                 <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
@@ -230,9 +261,9 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 6 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="reveal-card group bg-sky-50 p-8 rounded-xl shadow-lg border border-sky-100 hover:shadow-sky-200 hover:shadow-xl opacity-0 translate-y-6 transition-all duration-700 will-change-transform hover:-translate-y-1 hover:scale-[1.02]">
+              <div className="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
+                <svg className="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M15 14h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>

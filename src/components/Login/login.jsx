@@ -6,7 +6,7 @@ function LoginPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <header className="bg-black text-white flex justify-between items-center px-6 py-3">
         <div className="flex items-center gap-2">
-          <img src= "{loginImage}" alt="Sahayak" className="h-10 w-10" />
+          <img src={loginImage} alt="Sahayak" className="h-10 w-10" />
           <span className="text-xl font-bold">Sahayak</span>
         </div>
         <nav className="flex items-center gap-6">
@@ -19,7 +19,7 @@ function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-8">
         <div className="hidden md:flex w-1/2 justify-center">
           <img
-            src="{loginImage}" 
+            src={loginImage} 
             alt="Login Illustration"
             className="max-w-md"
           />
@@ -103,4 +103,4 @@ function LoginPage() {
     </div>
   );
 }
-export default Login;
+export default LoginPage;
