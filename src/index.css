@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 
+/* Prevent horizontal scroll */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 /* Custom animations */
 @keyframes gradient-x {
   0%, 100% {
