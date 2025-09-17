@@ -225,30 +225,40 @@ const InstantKBmode = () => {
   };
 
   const generateExplanation = async () => {
-    if (!question.trim()) return;
-    
-    setIsLoading(true);
-    // Simulate AI explanation generation
-    setTimeout(() => {
-      const mockExplanation = `Great question! Let me break this down in simple terms:
+  if (!question.trim()) return;
 
-        This is like when you're trying to understand something new. Think of it as building with blocks - each concept is a building block that connects to others.
+  setIsLoading(true);
 
-        🔍 **The Simple Answer:**
-        Imagine you're explaining this to a friend who's never heard of it before. The basic idea is that complex topics become much easier when we use familiar comparisons.
+  try {
+    const formData = new FormData();
+    formData.append("question", question);
 
-        🎯 **An Easy Analogy:**
-        It's like being a translator between "complicated science speak" and "everyday language." Just like how a GPS turns complex map data into simple "turn left, turn right" directions!
+    if (uploadedPhoto) {
+      formData.append("photo", uploadedPhoto);
+    }
 
-        💡 **Why This Matters:**
-        Understanding this helps you grasp bigger concepts later, just like learning to walk helps you eventually run marathons.
+    const response = await fetch("http://127.0.0.1:8000/api/v1/kbmode/instantkb/", {
+      method: "POST",
+      body: formData,
+    });
 
-        Remember: There are no silly questions - every expert was once a beginner asking the same things you're asking now!`;
-      
-      setExplanation(mockExplanation);
-      setIsLoading(false);
-    }, 2000);
-  };
+    if (!response.ok) {
+      throw new Error("Failed to fetch explanation");
+    }
+
+    const data = await response.json();
+
+    // ✅ Backend sends { response: "..." }
+    setExplanation(data.response);
+  } catch (error) {
+    console.error(error);
+    setExplanation("Something went wrong. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   // Explanation functions
   const handleCopy = async () => {
