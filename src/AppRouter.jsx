@@ -5,6 +5,7 @@ import AdminDashboard from "./components/Admin/AdminDashboard";
 import TeacherDashboard from "./components/Teacher/TeacherDashboard";
 import SignupPage from "./components/Signup/SignupPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import InstantKBmode from "./components/InstantKnowledgeMode/instantKBmode";
 
 const AppRouter = () => {
   return (
@@ -14,14 +15,10 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route
-          path="/teacher"
-          element={
-            <ProtectedRoute>
-              <TeacherDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/teacher" element={ <ProtectedRoute> <TeacherDashboard /></ProtectedRoute>}/>
+        <Route path="/instantkb" element={ <ProtectedRoute> <InstantKBmode /></ProtectedRoute>}/>
+
+        
       </Routes>
     </BrowserRouter>
   );

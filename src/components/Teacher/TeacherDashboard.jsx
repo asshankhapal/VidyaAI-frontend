@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Tile = ({ color, title, subtitle, points, cta }) => (
   <div className="group bg-white text-gray-800 rounded-2xl border border-gray-100 shadow-xl p-6 md:p-7 transition-all duration-500 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-sky-200/60">
@@ -50,15 +51,45 @@ const ChatbotButton = () => {
 
   // Initialize or get session ID
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('chatbot_session_id');
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    } else {
-      const newSessionId = 'session_' + Date.now();
-      localStorage.setItem('chatbot_session_id', newSessionId);
-      setSessionId(newSessionId);
-    }
-  }, []);
+  // Add a small delay to ensure DOM is fully rendered
+  const timer = setTimeout(() => {
+    const tiles = document.querySelectorAll(".teacher-reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("opacity-100", "translate-y-0");
+            e.target.classList.remove("opacity-0", "translate-y-6");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    tiles.forEach((t, i) => {
+      // Check if element is already in view
+      const rect = t.getBoundingClientRect();
+      const isInView = (
+        rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.bottom >= 0
+      );
+      
+      if (isInView) {
+        t.style.transitionDelay = `${i * 80}ms`;
+        t.classList.add("opacity-100", "translate-y-0");
+        t.classList.remove("opacity-0", "translate-y-6");
+      } else {
+        t.style.transitionDelay = `${i * 80}ms`;
+        io.observe(t);
+      }
+    });
+    
+    return () => io.disconnect();
+  }, 100); // 100ms delay
+
+  return () => clearTimeout(timer);
+}, []);
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -405,15 +436,25 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
-            <Tile
-              color="bg-rose-500"
-              title="Live Interaction"
-              subtitle="Connect in real-time"
-              points={["Video calls", "Screen sharing", "Real-time chat", "Interactive tools"]}
-              cta="Open Live Interaction"
-            />
+            <Link to="/instantkb">
+              <Tile
+                color="bg-indigo-500"
+                title="Instant Knowledge Base"
+                subtitle="Ask and Learn Instantly"
+                points={[
+                  "Voice-to-Text questions",
+                  "Simple explanations",
+                  "Local language support",
+                  "AI-powered answers"
+                ]}
+                cta="Open Knowledge Base"
+              />
+            </Link>
           </div>
+
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
             <Tile
               color="bg-indigo-500"
