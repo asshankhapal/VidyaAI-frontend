@@ -9,7 +9,7 @@ const ProfileDetails = () => {
     grade: 'Grade 10-12',
     language: 'English, Spanish',
     age: '42',
-    vidyaaiId: 'VID789012' // This field should not be editable
+    vidyaaiId: 'VID789012' 
   });
 
   const handleInputChange = (e) => {
