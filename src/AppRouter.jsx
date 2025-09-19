@@ -5,7 +5,7 @@ import AdminDashboard from "./components/Admin/AdminDashboard";
 import TeacherDashboard from "./components/Teacher/TeacherDashboard";
 import SignupPage from "./components/Signup/SignupPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import InstantKBmode from "./components/InstantKnowledgeMode/instantKBmode";
+import InstantKBmode from "./components/InstantKnowledgeMode/InstantKBmode";
 import ProfileDetails from "./components/ShowProfile/ProfileDetails"
 
 
