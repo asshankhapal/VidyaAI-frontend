@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import VoiceInput from "../VoiceInput";
 
 const Tile = ({ color, title, subtitle, points, cta }) => (
   <div className="group bg-white text-gray-800 rounded-2xl border border-gray-100 shadow-xl p-6 md:p-7 transition-all duration-500 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-sky-200/60">
@@ -42,6 +43,8 @@ const ChatbotButton = () => {
   ]);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null); // Add session ID state
+  const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState("");
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom when messages update
@@ -90,6 +93,21 @@ const ChatbotButton = () => {
 
   return () => clearTimeout(timer);
 }, []);
+
+  const handleVoiceReply = (reply) => {
+    console.log("Voice reply received in TeacherDashboard:", reply);
+    setLoading(false);
+    setMessages((prev) => [...prev, { text: reply, sender: "bot" }]);
+  };
+
+  const handleVoiceStart = () => {
+    setIsListening(true);
+    setLoading(true); // Show loading when voice input starts
+  };
+
+  const handleVoiceEnd = () => {
+    setIsListening(false);
+  };
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -231,21 +249,44 @@ const ChatbotButton = () => {
           
           {/* Input */}
           <div className="p-3 border-t border-gray-200">
-            <div className="flex">
+            {isListening && (
+              <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-blue-700">Listening... Speak now!</span>
+                </div>
+                {interimText && (
+                  <div className="mt-1 text-xs text-blue-600 italic">📝 {interimText}</div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition-colors"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Send
               </button>
+            </div>
+
+            <div className="mt-2 flex justify-center">
+              <VoiceInput
+                onReply={handleVoiceReply}
+                onStart={handleVoiceStart}
+                onEnd={handleVoiceEnd}
+                onInterim={setInterimText}
+                onUserMessage={(msg) => setMessages((prev) => [...prev, { text: msg, sender: "user" }])}
+                sessionId={sessionId}
+              />
             </div>
           </div>
         </div>
