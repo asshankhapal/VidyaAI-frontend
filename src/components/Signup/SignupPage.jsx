@@ -12,6 +12,7 @@ function SignupPage() {
     education: "",
     age: "",
     grade: "",
+    school:""
   });
 
   const [errors, setErrors] = useState({});
@@ -56,6 +57,7 @@ function SignupPage() {
           education: formData.education,
           age: formData.age,
           grade: formData.grade,
+          school :formData.school
         }),
       });
 
