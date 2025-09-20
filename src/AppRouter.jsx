@@ -6,7 +6,8 @@ import TeacherDashboard from "./components/Teacher/TeacherDashboard";
 import SignupPage from "./components/Signup/SignupPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InstantKBmode from "./components/InstantKnowledgeMode/InstantKBmode";
-import ProfileDetails from "./components/ShowProfile/ProfileDetails"
+import ProfileDetails from "./components/ShowProfile/ProfileDetails";
+import EduVisualAidGenerator from "./components/VisualAid/VisualAid";
 
 
 const AppRouter = () => {
@@ -20,6 +21,7 @@ const AppRouter = () => {
         <Route path="/teacher" element={ <ProtectedRoute> <TeacherDashboard /></ProtectedRoute>}/>
         <Route path="/instantkb" element={ <ProtectedRoute> <InstantKBmode /></ProtectedRoute>}/>
         <Route path="/profile" element={ <ProtectedRoute> <ProfileDetails /></ProtectedRoute>}/>
+        <Route path="/visual-aid" element={ <ProtectedRoute> <EduVisualAidGenerator /></ProtectedRoute>}/>
       </Routes>
     </BrowserRouter>
   );
