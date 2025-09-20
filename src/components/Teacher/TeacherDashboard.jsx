@@ -497,14 +497,17 @@ const TeacherDashboard = () => {
           </div>
 
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
+            <Link to="/visual-aid">
             <Tile
-              color="bg-indigo-500"
-              title="Activity Creator"
-              subtitle="Generate engaging content"
-              points={["Story generator", "Quiz builder", "Game creator", "Visual aids"]}
-              cta="Open Activity Creator"
-            />
+                  color="bg-green-500" 
+                  title="Visual Aid Generator"
+                  subtitle="Create diagrams and illustrations"
+                  points={["Flowcharts", "Diagrams", "Charts", "Interactive visuals"]}
+                  cta="Open Visual Aid Generator"
+                />
+            </Link>
           </div>
+
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
             <Tile
               color="bg-sky-500"
