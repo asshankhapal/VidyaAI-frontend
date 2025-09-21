@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import InstantKBmode from "./components/InstantKnowledgeMode/InstantKBmode";
 import ProfileDetails from "./components/ShowProfile/ProfileDetails";
 import EduVisualAidGenerator from "./components/VisualAid/VisualAid";
+import WorksheetGenerator from "./components/Worksheets/Worksheet"
 
 
 const AppRouter = () => {
@@ -22,6 +23,7 @@ const AppRouter = () => {
         <Route path="/instantkb" element={ <ProtectedRoute> <InstantKBmode /></ProtectedRoute>}/>
         <Route path="/profile" element={ <ProtectedRoute> <ProfileDetails /></ProtectedRoute>}/>
         <Route path="/visual-aid" element={ <ProtectedRoute> <EduVisualAidGenerator /></ProtectedRoute>}/>
+        <Route path="/worksheet" element={ <ProtectedRoute> <WorksheetGenerator /></ProtectedRoute>}/>
       </Routes>
     </BrowserRouter>
   );
