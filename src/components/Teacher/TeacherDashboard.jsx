@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import VoiceInput from "../VoiceInput";
+import GoogleTranslate from "../GoogleTranslate"; // Import the Google Translate component
 
 const Tile = ({ color, title, subtitle, points, cta }) => (
   <div className="group bg-white text-gray-800 rounded-2xl border border-gray-100 shadow-xl p-6 md:p-7 transition-all duration-500 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-sky-200/60">
@@ -42,7 +43,7 @@ const ChatbotButton = () => {
     }
   ]);
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(null); // Add session ID state
+  const [sessionId, setSessionId] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState("");
   const messagesEndRef = useRef(null);
@@ -54,45 +55,45 @@ const ChatbotButton = () => {
 
   // Initialize or get session ID
   useEffect(() => {
-  // Add a small delay to ensure DOM is fully rendered
-  const timer = setTimeout(() => {
-    const tiles = document.querySelectorAll(".teacher-reveal");
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("opacity-100", "translate-y-0");
-            e.target.classList.remove("opacity-0", "translate-y-6");
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
-
-    tiles.forEach((t, i) => {
-      // Check if element is already in view
-      const rect = t.getBoundingClientRect();
-      const isInView = (
-        rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.bottom >= 0
+    // Add a small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      const tiles = document.querySelectorAll(".teacher-reveal");
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("opacity-100", "translate-y-0");
+              e.target.classList.remove("opacity-0", "translate-y-6");
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
       );
-      
-      if (isInView) {
-        t.style.transitionDelay = `${i * 80}ms`;
-        t.classList.add("opacity-100", "translate-y-0");
-        t.classList.remove("opacity-0", "translate-y-6");
-      } else {
-        t.style.transitionDelay = `${i * 80}ms`;
-        io.observe(t);
-      }
-    });
-    
-    return () => io.disconnect();
-  }, 100); // 100ms delay
 
-  return () => clearTimeout(timer);
-}, []);
+      tiles.forEach((t, i) => {
+        // Check if element is already in view
+        const rect = t.getBoundingClientRect();
+        const isInView = (
+          rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+          rect.bottom >= 0
+        );
+        
+        if (isInView) {
+          t.style.transitionDelay = `${i * 80}ms`;
+          t.classList.add("opacity-100", "translate-y-0");
+          t.classList.remove("opacity-0", "translate-y-6");
+        } else {
+          t.style.transitionDelay = `${i * 80}ms`;
+          io.observe(t);
+        }
+      });
+      
+      return () => io.disconnect();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleVoiceReply = (reply) => {
     console.log("Voice reply received in TeacherDashboard:", reply);
@@ -102,7 +103,7 @@ const ChatbotButton = () => {
 
   const handleVoiceStart = () => {
     setIsListening(true);
-    setLoading(true); // Show loading when voice input starts
+    setLoading(true);
   };
 
   const handleVoiceEnd = () => {
@@ -112,7 +113,6 @@ const ChatbotButton = () => {
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
 
-    // Add user message
     const userMessage = { text: message, sender: "user" };
     setMessages(prev => [...prev, userMessage]);
     setMessage("");
@@ -126,7 +126,7 @@ const ChatbotButton = () => {
         },
         body: JSON.stringify({ 
           message: message,
-          session_id: sessionId // Send session ID for context
+          session_id: sessionId
         })
       });
 
@@ -134,15 +134,11 @@ const ChatbotButton = () => {
 
       const data = await response.json();
       
-      // Check if response has the expected structure
       if (data && data.reply) {
-        // Extract just the text content from the reply
         let replyText = data.reply;
         
-        // If the reply contains JSON structure, extract the actual content
         if (typeof replyText === 'string' && replyText.includes('"response":')) {
           try {
-            // Try to parse the JSON string within the response
             const jsonMatch = replyText.match(/"response":\s*"([^"]*)"/);
             if (jsonMatch && jsonMatch[1]) {
               replyText = jsonMatch[1];
@@ -152,7 +148,6 @@ const ChatbotButton = () => {
           }
         }
         
-        // Structure the bot response
         const structuredText = Array.isArray(replyText)
           ? replyText.map((item, idx) => `• ${item}`).join("\n")
           : replyText;
@@ -178,7 +173,6 @@ const ChatbotButton = () => {
     }
   };
 
-  // Add function to reset conversation
   const resetConversation = () => {
     const newSessionId = 'session_' + Date.now();
     localStorage.setItem('chatbot_session_id', newSessionId);
@@ -190,6 +184,7 @@ const ChatbotButton = () => {
       }
     ]);
   };
+
   return (
     <>
       {/* Chatbot Button */}
@@ -361,6 +356,11 @@ const TeacherDashboard = () => {
                 Home
               </a>
 
+              {/* Google Translate Component */}
+              <div className="flex items-center">
+                <GoogleTranslate />
+              </div>
+
               {/* Profile dropdown */}
               <div className="relative">
                 <button
@@ -434,6 +434,10 @@ const TeacherDashboard = () => {
           }`}
         >
           <div className="px-4 pt-2 pb-3 space-y-2 bg-white shadow-lg">
+            {/* Google Translate for Mobile */}
+            <div className="py-2">
+              <GoogleTranslate />
+            </div>
             <a
               href="/activities"
               className="block text-gray-700 hover:text-indigo-600 text-base"
@@ -477,8 +481,6 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
             <Link to="/instantkb">
               <Tile
