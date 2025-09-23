@@ -8,7 +8,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import InstantKBmode from "./components/InstantKnowledgeMode/InstantKBmode";
 import ProfileDetails from "./components/ShowProfile/ProfileDetails";
 import EduVisualAidGenerator from "./components/VisualAid/VisualAid";
-import WorksheetGenerator from "./components/Worksheets/Worksheet"
+import WorksheetGenerator from "./components/Worksheets/Worksheet";
+
 
 
 const AppRouter = () => {

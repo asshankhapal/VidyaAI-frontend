@@ -509,14 +509,21 @@ const TeacherDashboard = () => {
           </div>
 
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
-            <Tile
-              color="bg-sky-500"
-              title="Activity Scheduler"
-              subtitle="Plan your sessions"
-              points={["Calendar view", "Lesson planning", "Reminders", "Time management"]}
-              cta="Open Activity Scheduler"
-            />
-          </div>
+             <Link to="/worksheet">
+          <Tile
+            color="bg-sky-500"
+            title="Worksheet Generator"
+            subtitle="Create custom worksheets"
+            points={[
+              "MCQs & quizzes",
+              "Fill-in-the-blanks",
+              "Diagrams & labeling",
+              "Answer keys"
+            ]}
+            cta="Open Worksheet Generator"
+          />
+          </Link>
+        </div>
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
             <Tile
               color="bg-violet-500"

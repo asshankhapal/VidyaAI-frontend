@@ -8,19 +8,13 @@ const WorksheetGenerator = () => {
   const [language, setLanguage] = useState('english');
   const [generatedWorksheets, setGeneratedWorksheets] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showAnswers, setShowAnswers] = useState({});
+  const [activeLevel, setActiveLevel] = useState(null);
+  const [showAnswers, setShowAnswers] = useState(false);
   const [error, setError] = useState(null);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
     setError(null);
-  };
-
-  const toggleAnswers = (level) => {
-    setShowAnswers(prev => ({
-      ...prev,
-      [level]: !prev[level]
-    }));
   };
 
   // Function to parse the worksheet text into structured data
@@ -104,6 +98,8 @@ const WorksheetGenerator = () => {
 
     setIsGenerating(true);
     setError(null);
+    setActiveLevel(null);
+    setShowAnswers(false);
 
     try {
       const formData = new FormData();
@@ -133,6 +129,12 @@ const WorksheetGenerator = () => {
       }
       
       setGeneratedWorksheets(parsedWorksheets);
+      
+      // Set the first available level as active
+      const levels = Object.keys(parsedWorksheets);
+      if (levels.length > 0) {
+        setActiveLevel(levels[0]);
+      }
     } catch (error) {
       console.error('Error generating worksheets:', error);
       setError(error.message);
@@ -209,11 +211,22 @@ const WorksheetGenerator = () => {
           ))}
         </div>
       )}
+      {showAnswers && (
+        <div className="answer-display">
+          <p><strong>Answer:</strong> {q.answer}</p>
+        </div>
+      )}
     </div>
   );
 
   return (
     <div className="worksheet-generator">
+      <a
+        href="/teacher"
+        className="fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-md"
+      >
+        Home
+      </a>
       <header className="app-header">
         <h1>Differentiated Worksheet Generator</h1>
         <p>Create customized worksheets for different learning levels</p>
@@ -293,39 +306,60 @@ const WorksheetGenerator = () => {
           </div>
         )}
 
-        {/* Render Worksheets */}
+        {/* Level Selection Buttons */}
         {Object.keys(generatedWorksheets).length > 0 && (
-          <div className="results-section">
-            <h2>Generated Worksheets</h2>
-            <div className="worksheets-container">
+          <div className="level-selection">
+            <h2>Select Difficulty Level</h2>
+            <div className="level-buttons">
               {['easy', 'medium', 'hard'].map(level => (
                 generatedWorksheets[level] && (
-                  <div key={level} className="worksheet-card">
-                    <h3>{generatedWorksheets[level].title}</h3>
-                    <div className="worksheet-content">
-                      {generatedWorksheets[level].questions.map(renderQuestion)}
-                    </div>
-                    <div className="worksheet-actions">
-                      <button className="download-btn" onClick={() => handleDownload(level)}>Download PDF</button>
-                      <button className="answers-btn" onClick={() => toggleAnswers(level)}>
-                        {showAnswers[level] ? 'Hide Answers' : 'Show Answers'}
-                      </button>
-                      <button className="download-answers-btn" onClick={() => handleDownload(level, true)}>Download Answer Key</button>
-                    </div>
-                    {showAnswers[level] && (
-                      <div className="answers-section">
-                        <h4>Answer Key</h4>
-                        {generatedWorksheets[level].questions.map((q, idx) => (
-                          <div key={idx} className="answer-item">
-                            <p><strong>Question {idx + 1}:</strong> {q.text}</p>
-                            <p><strong>Answer:</strong> {q.answer}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    key={level}
+                    className={`level-btn ${activeLevel === level ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveLevel(level);
+                      setShowAnswers(false);
+                    }}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </button>
                 )
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Display Active Worksheet */}
+        {activeLevel && generatedWorksheets[activeLevel] && (
+          <div className="worksheet-display">
+            <div className="worksheet-header">
+              <h2>{generatedWorksheets[activeLevel].title}</h2>
+              <div className="worksheet-controls">
+                <button 
+                  className={`view-answers-btn ${showAnswers ? 'active' : ''}`}
+                  onClick={() => setShowAnswers(!showAnswers)}
+                >
+                  {showAnswers ? 'Hide Answers' : 'View Answer Key'}
+                </button>
+                <button 
+                  className="download-worksheet-btn"
+                  onClick={() => handleDownload(activeLevel)}
+                >
+                  Download Worksheet PDF
+                </button>
+                <button 
+                  className="download-answers-btn"
+                  onClick={() => handleDownload(activeLevel, true)}
+                >
+                  Download Answer Key PDF
+                </button>
+              </div>
+            </div>
+            
+            <div className="worksheet-content">
+              {generatedWorksheets[activeLevel].questions.map((question, index) => 
+                renderQuestion(question, index)
+              )}
             </div>
           </div>
         )}
@@ -482,56 +516,135 @@ const WorksheetGenerator = () => {
           color: #c62828;
         }
         
-        .results-section {
-          margin-top: 40px;
+        .level-selection {
+          margin: 30px 0;
+          text-align: center;
         }
         
-        .results-section h2 {
-          margin-top: 0;
+        .level-selection h2 {
+          margin-bottom: 20px;
           color: #444;
-          border-bottom: 2px solid #eee;
-          padding-bottom: 10px;
         }
         
-        .worksheets-container {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 25px;
-          margin-top: 20px;
+        .level-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 15px;
+          flex-wrap: wrap;
         }
         
-        .worksheet-card {
+        .level-btn {
+          padding: 12px 24px;
+          border: 2px solid #6e8efb;
+          background: white;
+          color: #6e8efb;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 1rem;
+          font-weight: 600;
+          transition: all 0.3s;
+        }
+        
+        .level-btn:hover {
+          background: #6e8efb;
+          color: white;
+          transform: translateY(-2px);
+        }
+        
+        .level-btn.active {
+          background: #6e8efb;
+          color: white;
+          box-shadow: 0 4px 8px rgba(110, 142, 251, 0.3);
+        }
+        
+        .worksheet-display {
+          margin-top: 30px;
           border: 1px solid #eaeaea;
           border-radius: 8px;
-          padding: 20px;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-          transition: transform 0.3s;
+          padding: 25px;
+          background: #fafafa;
         }
         
-        .worksheet-card:hover {
-          transform: translateY(-5px);
+        .worksheet-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+          gap: 15px;
         }
         
-        .worksheet-card h3 {
-          margin-top: 0;
+        .worksheet-header h2 {
+          margin: 0;
           color: #6e8efb;
-          border-bottom: 1px solid #eee;
-          padding-bottom: 10px;
+        }
+        
+        .worksheet-controls {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        
+        .view-answers-btn {
+          background: #2196F3;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background 0.3s;
+        }
+        
+        .view-answers-btn:hover {
+          background: #0b7dda;
+        }
+        
+        .view-answers-btn.active {
+          background: #0b7dda;
+          box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
+        }
+        
+        .download-worksheet-btn {
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background 0.3s;
+        }
+        
+        .download-worksheet-btn:hover {
+          background: #3d8b40;
+        }
+        
+        .download-answers-btn {
+          background: #9c27b0;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background 0.3s;
+        }
+        
+        .download-answers-btn:hover {
+          background: #7b1fa2;
         }
         
         .worksheet-content {
-          margin-bottom: 20px;
-          min-height: 200px;
-          max-height: 400px;
-          overflow-y: auto;
-          padding: 10px;
-          background: #f9f9f9;
-          border-radius: 6px;
+          background: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .question-item {
-          margin-bottom: 15px;
-          padding-bottom: 15px;
+          margin-bottom: 20px;
+          padding-bottom: 20px;
           border-bottom: 1px solid #eee;
         }
         
@@ -543,92 +656,27 @@ const WorksheetGenerator = () => {
         
         .options-list {
           margin-left: 20px;
-          margin-top: 8px;
+          margin-top: 10px;
         }
         
         .option-item {
-          margin-bottom: 5px;
+          margin-bottom: 8px;
           font-size: 0.95rem;
+          color: #555;
         }
         
-        .worksheet-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        
-        .download-btn {
-          background: #4CAF50;
-          color: white;
-          border: none;
+        .answer-display {
+          margin-top: 10px;
           padding: 10px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: background 0.3s;
-        }
-        
-        .download-btn:hover {
-          background: #3d8b40;
-        }
-        
-        .answers-btn {
-          background: #2196F3;
-          color: white;
-          border: none;
-          padding: 10px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: background 0.3s;
-        }
-        
-        .answers-btn:hover {
-          background: #0b7dda;
-        }
-        
-        .download-answers-btn {
-          background: #9c27b0;
-          color: white;
-          border: none;
-          padding: 10px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: background 0.3s;
-        }
-        
-        .download-answers-btn:hover {
-          background: #7b1fa2;
-        }
-        
-        .answers-section {
-          margin-top: 20px;
-          padding: 15px;
-          background-color: #f9f9f9;
-          border-radius: 6px;
+          background-color: #f0f8f0;
           border-left: 4px solid #4CAF50;
+          border-radius: 4px;
         }
         
-        .answers-section h4 {
-          margin-top: 0;
-          color: #4CAF50;
-        }
-        
-        .answer-item {
-          margin-bottom: 15px;
-          padding-bottom: 15px;
-          border-bottom: 1px dashed #ddd;
-        }
-        
-        .answer-item:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
-          padding-bottom: 0;
-        }
-        
-        .answer-item p {
-          margin: 8px 0;
+        .answer-display p {
+          margin: 0;
+          color: #2e7d32;
+          font-weight: 600;
         }
         
         @media (max-width: 768px) {
@@ -636,8 +684,23 @@ const WorksheetGenerator = () => {
             grid-template-columns: 1fr;
           }
           
-          .worksheets-container {
-            grid-template-columns: 1fr;
+          .level-buttons {
+            flex-direction: column;
+            align-items: center;
+          }
+          
+          .level-btn {
+            width: 200px;
+          }
+          
+          .worksheet-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .worksheet-controls {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
