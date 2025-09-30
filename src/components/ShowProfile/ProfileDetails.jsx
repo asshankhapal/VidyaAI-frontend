@@ -1,25 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ProfileDetails = () => {
   const [userData, setUserData] = useState({
-    fullName: 'Alexa Rawles',
-    email: 'alexarawles@gmail.com',
-    language: 'English',
-    standardTeaching: 'Grade 10-12',
-    education: 'Ph.D. in Education Technology',
-    age: '42',
-    schoolCollege: 'Vidya AI University',
-    nickName: 'Alexa',
-    gender: 'Female',
-    country: 'United States',
-    timeZone: 'EST (UTC-5)',
-    phone: '+1 (555) 123-4567',
-    subjects: 'Mathematics, Physics',
-    experience: '15 years',
-    bio: 'Dedicated educator with a passion for innovative teaching methods.'
+    first_name: '',
+    last_name: '',
+    email: '',
+    lang: 'English',
+    education: '',
+    age: '',
+    grades: '',
+    school: ''
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const getUserIdFromToken = () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) return null;
+      
+      // If using JWT token, decode it to get user ID
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) return null;
+      
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      console.log(payload.user_id)
+      return payload.user_id || payload.sub || null;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  };
+  
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const currentUserId = getUserIdFromToken();
+  
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/auth/profile/${currentUserId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile data');
+      }
+
+      const result = await response.json();
+      
+      // Access the nested user object
+      const userData = result.user;
+      
+      setUserData({
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        email: userData.email || '',
+        lang: userData.lang || 'English',
+        education: userData.education || '',
+        age: userData.age || '',
+        grades: userData.grades || '',
+        school: userData.school || ''
+      });
+
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching profile:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,14 +91,42 @@ const ProfileDetails = () => {
     });
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // In a real app, you would save data to an API here
+  const handleSave = async () => {
+    try {
+      // API call to update user profile
+      const response = await fetch('http://127.0.0.1:8000/api/v1/auth/profile/', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // If update is successful, exit edit mode
+      setIsEditing(false);
+      console.log('Profile updated successfully');
+      
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating profile:', err);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset data if needed
+    // Refetch original data to reset any changes
+    fetchUserProfile();
+  };
+
+  // Handle Home button click
+  const handleHomeClick = () => {
+    // Navigate to home page - you can replace this with your routing logic
+    window.location.href = '/teacher'; // or use navigate('/') if using React Router
+    console.log('Navigating to home page...');
   };
 
   // Format the current date
@@ -47,7 +137,62 @@ const ProfileDetails = () => {
     day: 'numeric'
   });
 
-  // Responsive styles
+  // Get full name by combining first and last name
+  const fullName = `${userData.first_name} ${userData.last_name}`.trim();
+  const firstName = userData.first_name || 'User';
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div style={{ 
+        backgroundColor: '#f7f9fc', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+      }}>
+        <div style={{ textAlign: 'center', color: '#4a5568' }}>
+          <div style={{ fontSize: '24px', marginBottom: '10px' }}>Loading...</div>
+          <div>Fetching your profile information</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={{ 
+        backgroundColor: '#f7f9fc', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+      }}>
+        <div style={{ textAlign: 'center', color: '#e53e3e' }}>
+          <div style={{ fontSize: '24px', marginBottom: '10px' }}>Error</div>
+          <div style={{ marginBottom: '20px' }}>{error}</div>
+          <button 
+            onClick={fetchUserProfile}
+            style={{
+              background: 'linear-gradient(135deg, #4299e1, #3182ce)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '10px 20px',
+              cursor: 'pointer'
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Styles object with added homeButton style
   const styles = {
     container: {
       backgroundColor: '#f7f9fc',
@@ -73,10 +218,6 @@ const ProfileDetails = () => {
       alignItems: 'center',
       flexWrap: 'wrap',
       gap: '15px',
-      '@media (max-width: 768px)': {
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-      },
     },
     greeting: {
       flex: 1,
@@ -97,21 +238,25 @@ const ProfileDetails = () => {
       alignItems: 'center',
       gap: '15px',
       flexWrap: 'wrap',
-      '@media (max-width: 768px)': {
-        width: '100%',
-        justifyContent: 'space-between',
-      },
-      '@media (max-width: 480px)': {
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '10px',
-      },
+    },
+    homeButton: {
+      background: 'linear-gradient(135deg, #48bb78, #38a169)',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      padding: '10px 20px',
+      fontSize: '14px',
+      fontWeight: 600,
+      cursor: 'pointer',
+      transition: 'all 0.3s',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      textDecoration: 'none',
+      whiteSpace: 'nowrap',
     },
     searchBar: {
       position: 'relative',
-      '@media (max-width: 480px)': {
-        width: '100%',
-      },
     },
     searchInput: {
       padding: '10px 15px 10px 40px',
@@ -120,9 +265,6 @@ const ProfileDetails = () => {
       fontSize: '14px',
       width: '250px',
       transition: 'all 0.3s',
-      '@media (max-width: 480px)': {
-        width: '100%',
-      },
     },
     searchIcon: {
       position: 'absolute',
@@ -203,21 +345,12 @@ const ProfileDetails = () => {
       borderBottom: '1px solid #e2e8f0',
       flexWrap: 'wrap',
       gap: '15px',
-      '@media (max-width: 768px)': {
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-      },
     },
     profileInfo: {
       display: 'flex',
       alignItems: 'center',
       gap: '20px',
       flexWrap: 'wrap',
-      '@media (max-width: 480px)': {
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '15px',
-      },
     },
     profilePicture: {
       width: '80px',
@@ -257,21 +390,11 @@ const ProfileDetails = () => {
       transition: 'all 0.3s',
       boxShadow: '0 4px 6px rgba(66, 153, 225, 0.2)',
       whiteSpace: 'nowrap',
-      '@media (max-width: 768px)': {
-        alignSelf: 'flex-end',
-      },
-      '@media (max-width: 480px)': {
-        width: '100%',
-        alignSelf: 'center',
-      },
     },
     formGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
       gap: '20px',
-      '@media (max-width: 768px)': {
-        gridTemplateColumns: '1fr',
-      },
     },
     fieldGroup: {
       display: 'flex',
@@ -381,9 +504,6 @@ const ProfileDetails = () => {
       gap: '15px',
       marginTop: '30px',
       flexWrap: 'wrap',
-      '@media (max-width: 480px)': {
-        flexDirection: 'column',
-      },
     },
     saveButton: {
       background: 'linear-gradient(135deg, #4299e1, #3182ce)',
@@ -425,16 +545,34 @@ const ProfileDetails = () => {
     return responsiveStyle;
   };
 
+  // Get avatar initials from first and last name
+  const getAvatarInitials = () => {
+    if (userData.first_name && userData.last_name) {
+      return `${userData.first_name[0]}${userData.last_name[0]}`.toUpperCase();
+    } else if (userData.first_name) {
+      return userData.first_name[0].toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <div style={applyMediaQueries(styles.container)}>
       {/* Top Header */}
       <header style={applyMediaQueries(styles.topHeader)}>
         <div style={applyMediaQueries(styles.headerContent)}>
           <div style={applyMediaQueries(styles.greeting)}>
-            <h1 style={applyMediaQueries(styles.greetingH1)}>Welcome, Alexa</h1>
+            <h1 style={applyMediaQueries(styles.greetingH1)}>Welcome, {firstName}</h1>
             <p style={applyMediaQueries(styles.greetingP)}>{currentDate}</p>
           </div>
           <div style={applyMediaQueries(styles.headerRight)}>
+            {/* Home Button */}
+            <button 
+              style={applyMediaQueries(styles.homeButton)}
+              onClick={handleHomeClick}
+            >
+              <span>🏠</span> Home
+            </button>
+            
             <div style={applyMediaQueries(styles.searchBar)}>
               <span style={applyMediaQueries(styles.searchIcon)}>🔍</span>
               <input 
@@ -447,7 +585,9 @@ const ProfileDetails = () => {
               <span>🔔</span>
               <div style={applyMediaQueries(styles.notificationBadge)}></div>
             </div>
-            <div style={applyMediaQueries(styles.profileAvatar)}>AR</div>
+            <div style={applyMediaQueries(styles.profileAvatar)}>
+              {getAvatarInitials()}
+            </div>
           </div>
         </div>
       </header>
@@ -466,10 +606,16 @@ const ProfileDetails = () => {
         <div style={applyMediaQueries(styles.profileSection)}>
           <div style={applyMediaQueries(styles.profileHeader)}>
             <div style={applyMediaQueries(styles.profileInfo)}>
-              <div style={applyMediaQueries(styles.profilePicture)}>AR</div>
+              <div style={applyMediaQueries(styles.profilePicture)}>
+                {getAvatarInitials()}
+              </div>
               <div style={applyMediaQueries(styles.profileDetails)}>
-                <h2 style={applyMediaQueries(styles.profileName)}>{userData.fullName}</h2>
-                <p style={applyMediaQueries(styles.profileEmail)}>{userData.email}</p>
+                <h2 style={applyMediaQueries(styles.profileName)}>
+                  {fullName || 'No Name Provided'}
+                </h2>
+                <p style={applyMediaQueries(styles.profileEmail)}>
+                  {userData.email || 'No email provided'}
+                </p>
               </div>
             </div>
             <button 
@@ -481,20 +627,37 @@ const ProfileDetails = () => {
           </div>
 
           <div style={applyMediaQueries(styles.formGrid)}>
+            {/* First Name */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
-                <span>👤</span> Full Name
+                <span>👤</span> First Name
               </label>
               <input
                 type="text"
-                name="fullName"
-                value={userData.fullName}
+                name="first_name"
+                value={userData.first_name}
                 onChange={handleInputChange}
                 style={applyMediaQueries(styles.input)}
                 disabled={!isEditing}
               />
             </div>
 
+            {/* Last Name */}
+            <div style={applyMediaQueries(styles.fieldGroup)}>
+              <label style={applyMediaQueries(styles.label)}>
+                <span>👤</span> Last Name
+              </label>
+              <input
+                type="text"
+                name="last_name"
+                value={userData.last_name}
+                onChange={handleInputChange}
+                style={applyMediaQueries(styles.input)}
+                disabled={!isEditing}
+              />
+            </div>
+
+            {/* Email */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
                 <span>📧</span> Email Address
@@ -509,13 +672,14 @@ const ProfileDetails = () => {
               />
             </div>
 
+            {/* Language */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
                 <span>🗣️</span> Language
               </label>
               <select
-                name="language"
-                value={userData.language}
+                name="lang"
+                value={userData.lang}
                 onChange={handleInputChange}
                 style={applyMediaQueries(styles.select)}
                 disabled={!isEditing}
@@ -528,23 +692,10 @@ const ProfileDetails = () => {
               </select>
             </div>
 
+            {/* Education */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
-                <span>🎓</span> Standard Teaching
-              </label>
-              <input
-                type="text"
-                name="standardTeaching"
-                value={userData.standardTeaching}
-                onChange={handleInputChange}
-                style={applyMediaQueries(styles.input)}
-                disabled={!isEditing}
-              />
-            </div>
-
-            <div style={applyMediaQueries(styles.fieldGroup)}>
-              <label style={applyMediaQueries(styles.label)}>
-                <span>📚</span> Education
+                <span>🎓</span> Education
               </label>
               <input
                 type="text"
@@ -556,6 +707,7 @@ const ProfileDetails = () => {
               />
             </div>
 
+            {/* Age */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
                 <span>🎂</span> Age
@@ -570,71 +722,32 @@ const ProfileDetails = () => {
               />
             </div>
 
+            {/* Grades */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
-                <span>🏫</span> School/College
+                <span>📊</span> Grades
               </label>
               <input
                 type="text"
-                name="schoolCollege"
-                value={userData.schoolCollege}
+                name="grades"
+                value={userData.grades}
                 onChange={handleInputChange}
                 style={applyMediaQueries(styles.input)}
                 disabled={!isEditing}
               />
             </div>
 
+            {/* School */}
             <div style={applyMediaQueries(styles.fieldGroup)}>
               <label style={applyMediaQueries(styles.label)}>
-                <span>📞</span> Phone Number
+                <span>🏫</span> School
               </label>
               <input
                 type="text"
-                name="phone"
-                value={userData.phone}
+                name="school"
+                value={userData.school}
                 onChange={handleInputChange}
                 style={applyMediaQueries(styles.input)}
-                disabled={!isEditing}
-              />
-            </div>
-
-            <div style={applyMediaQueries(styles.fieldGroup)}>
-              <label style={applyMediaQueries(styles.label)}>
-                <span>📖</span> Subjects
-              </label>
-              <input
-                type="text"
-                name="subjects"
-                value={userData.subjects}
-                onChange={handleInputChange}
-                style={applyMediaQueries(styles.input)}
-                disabled={!isEditing}
-              />
-            </div>
-
-            <div style={applyMediaQueries(styles.fieldGroup)}>
-              <label style={applyMediaQueries(styles.label)}>
-                <span>⏳</span> Teaching Experience
-              </label>
-              <input
-                type="text"
-                name="experience"
-                value={userData.experience}
-                onChange={handleInputChange}
-                style={applyMediaQueries(styles.input)}
-                disabled={!isEditing}
-              />
-            </div>
-
-            <div style={{...applyMediaQueries(styles.fieldGroup), gridColumn: '1 / -1'}}>
-              <label style={applyMediaQueries(styles.label)}>
-                <span>📝</span> Bio
-              </label>
-              <textarea
-                name="bio"
-                value={userData.bio}
-                onChange={handleInputChange}
-                style={applyMediaQueries(styles.textarea)}
                 disabled={!isEditing}
               />
             </div>
@@ -642,13 +755,15 @@ const ProfileDetails = () => {
 
           {/* Email Section */}
           <div style={applyMediaQueries(styles.emailSection)}>
-            <h3 style={applyMediaQueries(styles.emailHeader)}>My email Address</h3>
+            <h3 style={applyMediaQueries(styles.emailHeader)}>My Email Address</h3>
             <div style={applyMediaQueries(styles.emailItem)}>
               <div style={applyMediaQueries(styles.emailIcon)}>
                 <span>📧</span>
               </div>
               <div style={applyMediaQueries(styles.emailDetails)}>
-                <div style={applyMediaQueries(styles.emailAddress)}>{userData.email}</div>
+                <div style={applyMediaQueries(styles.emailAddress)}>
+                  {userData.email || 'No email provided'}
+                </div>
                 <div style={applyMediaQueries(styles.emailTime)}>Verified • 1 month ago</div>
               </div>
               {isEditing && (

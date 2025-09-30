@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 function SignupPage() {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
     first_name: "",
@@ -11,12 +10,16 @@ function SignupPage() {
     lang: "",
     education: "",
     age: "",
-    grade: "",
-    school:""
+    grades: [],
+    school: "",
+    terms: false
   });
 
   const [errors, setErrors] = useState({});
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const navigate = useNavigate();
+
+  const gradeOptions = Array.from({ length: 12 }, (_, i) => `Grade ${i + 1}`);
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
@@ -25,7 +28,6 @@ function SignupPage() {
       [id]: type === "checkbox" ? checked : value,
     });
     
-    // Clear error when user starts typing
     if (errors[id]) {
       setErrors({
         ...errors,
@@ -34,12 +36,34 @@ function SignupPage() {
     }
   };
 
+  const handleGradeChange = (e) => {
+    const { value, checked } = e.target;
+    let updatedGrades = [...formData.grades];
+    
+    if (checked) {
+      updatedGrades.push(value);
+    } else {
+      updatedGrades = updatedGrades.filter(grade => grade !== value);
+    }
+    
+    setFormData({
+      ...formData,
+      grades: updatedGrades
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
+    // Validation
     if (!formData.terms) {
       setErrors({ terms: "You must accept the terms to continue" });
+      return;
+    }
+
+    if (formData.grades.length === 0) {
+      setErrors({ grades: "Please select at least one grade" });
       return;
     }
 
@@ -48,7 +72,6 @@ function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: formData.username,
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
@@ -56,16 +79,19 @@ function SignupPage() {
           lang: formData.lang,
           education: formData.education,
           age: formData.age,
-          grade: formData.grade,
-          school :formData.school
+          grades: formData.grades,
+          school: formData.school
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Signup successful! Redirecting to login...");
-        navigate("/login");
+        // Generate a VidyaAI ID (you might want to get this from the backend response)
+        setShowSuccessPopup(true);
+        
+        // In a real application, you might want to get the ID from the backend
+        // setVidyaAIId(data.user_id || data.vidyaai_id);
       } else {
         // Handle validation errors from backend
         if (data.errors) {
@@ -80,9 +106,43 @@ function SignupPage() {
     }
   };
 
+  const closePopupAndRedirect = () => {
+    setShowSuccessPopup(false);
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Sign Up Successful!</h3>
+              <p className="text-gray-600 mb-4">
+                Welcome to VidyaAI, {formData.first_name}! Your account has been created successfully.
+              </p>
+              
+              <p className="text-sm text-gray-600 mb-4">
+                Your VidyaAI ID has been sent to your registered email address: <strong>{formData.email}</strong>
+              </p>
+              
+              <button
+                onClick={closePopupAndRedirect}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300"
+              >
+                Continue to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <header className="flex justify-between items-center mb-10">
@@ -126,6 +186,12 @@ function SignupPage() {
                     </div>
                     <p className="text-indigo-100">Smart worksheet generation</p>
                   </div>
+                  <div className="flex items-center">
+                    <div className="bg-indigo-500 rounded-full p-2 mr-3">
+                      <i className="fas fa-layer-group text-white"></i>
+                    </div>
+                    <p className="text-indigo-100">Teach multiple grades</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -137,22 +203,7 @@ function SignupPage() {
 
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Username */}
-                  <div className="md:col-span-2">
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                      Username *
-                    </label>
-                    <input
-                      id="username"
-                      type="text"
-                      required
-                      value={formData.username}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      placeholder="Choose a username"
-                    />
-                  </div>
-
+                  
                   {/* First Name */}
                   <div>
                     <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -167,6 +218,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="Your first name"
                     />
+                    {errors.first_name && <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>}
                   </div>
 
                   {/* Last Name */}
@@ -183,6 +235,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="Your last name"
                     />
+                    {errors.last_name && <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>}
                   </div>
 
                   {/* Email */}
@@ -199,6 +252,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="your.email@example.com"
                     />
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                   </div>
 
                   {/* Password */}
@@ -215,6 +269,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="Create a strong password"
                     />
+                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                   </div>
 
                   {/* Preferred Language */}
@@ -235,6 +290,7 @@ function SignupPage() {
                       <option value="Marathi">Marathi</option>
                       <option value="Gujarati">Gujarati</option>
                     </select>
+                    {errors.lang && <p className="text-red-500 text-sm mt-1">{errors.lang}</p>}
                   </div>
 
                   {/* Age */}
@@ -252,6 +308,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="Your age"
                     />
+                    {errors.age && <p className="text-red-500 text-sm mt-1">{errors.age}</p>}
                   </div>
 
                   {/* Education */}
@@ -268,25 +325,34 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="e.g. B.Ed, M.Sc"
                     />
+                    {errors.education && <p className="text-red-500 text-sm mt-1">{errors.education}</p>}
                   </div>
 
-                  {/* Grade */}
-                  <div>
-                    <label htmlFor="grade" className="block text-sm font-medium text-gray-700 mb-1">
-                      Grade *
+                  {/* Grades - Multiple Selection */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grades You Teach *
                     </label>
-                    <select
-                      id="grade"
-                      required
-                      value={formData.grade}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white"
-                    >
-                      <option value="">Select grade</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i+1} value={`Grade ${i+1}`}>Grade {i+1}</option>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {gradeOptions.map((grade) => (
+                        <label key={grade} className="flex items-center space-x-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            value={grade}
+                            checked={formData.grades.includes(grade)}
+                            onChange={handleGradeChange}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                          />
+                          <span className="text-sm text-gray-700">{grade}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
+                    {errors.grades && <p className="text-red-500 text-sm mt-1">{errors.grades}</p>}
+                    {formData.grades.length > 0 && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        Selected: {formData.grades.join(", ")}
+                      </p>
+                    )}
                   </div>
 
                   {/* School/College */}
@@ -303,6 +369,7 @@ function SignupPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       placeholder="Name of your institution"
                     />
+                    {errors.school && <p className="text-red-500 text-sm mt-1">{errors.school}</p>}
                   </div>
 
                   {/* Terms and Conditions */}
@@ -323,6 +390,7 @@ function SignupPage() {
                       </label>
                     </div>
                   </div>
+                  {errors.terms && <p className="text-red-500 text-sm mt-1 md:col-span-2">{errors.terms}</p>}
                 </div>
 
                 {/* Submit Button */}
