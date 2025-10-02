@@ -512,29 +512,37 @@ const TeacherDashboard = () => {
 
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
              <Link to="/worksheet">
-          <Tile
-            color="bg-sky-500"
-            title="Worksheet Generator"
-            subtitle="Create custom worksheets"
-            points={[
-              "MCQs & quizzes",
-              "Fill-in-the-blanks",
-              "Diagrams & labeling",
-              "Answer keys"
-            ]}
-            cta="Open Worksheet Generator"
-          />
-          </Link>
+                <Tile
+                  color="bg-sky-500"
+                  title="Worksheet Generator"
+                  subtitle="Create custom worksheets"
+                  points={[
+                    "MCQs & quizzes",
+                    "Fill-in-the-blanks",
+                    "Diagrams & labeling",
+                    "Answer keys"
+                  ]}
+                  cta="Open Worksheet Generator"
+                />
+              </Link>
         </div>
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
-            <Tile
-              color="bg-violet-500"
-              title="Analytics & Reports"
-              subtitle="Track performance"
-              points={["Performance metrics", "Progress tracking", "Custom reports", "Data insights"]}
-              cta="Open Analytics & Reports"
-            />
+            <Link to="/planner">
+              <Tile
+                color="bg-emerald-500"
+                title="Weekly Lesson Planner"
+                subtitle="Plan your teaching week"
+                points={[
+                  "Select grade & subjects",
+                  "Upload syllabus & topics",
+                  "Distribute hours across subjects",
+                  "Auto-generate weekly schedule"
+                ]}
+                cta="Open Weekly Planner"
+              />
+            </Link>
           </div>
+
           <div className="teacher-reveal opacity-0 translate-y-6 transition-all duration-700">
             <Tile
               color="bg-orange-500"

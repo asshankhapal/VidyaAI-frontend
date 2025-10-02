@@ -17,77 +17,221 @@ const WorksheetGenerator = () => {
     setError(null);
   };
 
-  // Function to parse the worksheet text into structured data
-  const parseWorksheetText = (text, level) => {
+  // Improved parsing function that handles different question types
+  const parseWorksheetText = (text, level, type) => {
+    console.log(`Parsing ${level} ${type} worksheet:`, text);
+    
     const worksheet = {
-      title: `${level.charAt(0).toUpperCase() + level.slice(1)} Worksheet`,
-      questions: []
+      title: `${level.charAt(0).toUpperCase() + level.slice(1)} ${type.toUpperCase()} Worksheet`,
+      questions: [],
+      type: type
     };
     
-    // Extract title if available
-    const titleMatch = text.match(/\*\*([^*]+)\*\*/);
+    // Extract title using multiple patterns
+    const titleMatch = text.match(/(?:WORKSHEET TITLE:|Title:|# |\*\*)([^\n*]+)(?:\*\*|$)/i);
     if (titleMatch && titleMatch[1]) {
-      worksheet.title = titleMatch[1];
+      worksheet.title = titleMatch[1].trim();
     }
     
-    // Split by question markers
-    const questionSections = text.split(/\n\n\d+\./);
-    
-    // Remove the first section (title and instructions)
-    if (questionSections.length > 1) {
-      questionSections.shift();
+    // Extract instructions if available
+    const instructionsMatch = text.match(/INSTRUCTIONS:\s*(.+?)(?=\nQUESTIONS:|\n\d+\.|\nANSWER KEY:)/is);
+    if (instructionsMatch && instructionsMatch[1]) {
+      worksheet.instructions = instructionsMatch[1].trim();
     }
     
-    questionSections.forEach((section, index) => {
-      const lines = section.trim().split('\n');
+    // Find questions section
+    let questionsText = text;
+    const questionsIndex = text.search(/QUESTIONS:|\n\d+\./i);
+    if (questionsIndex > -1) {
+      questionsText = text.substring(questionsIndex);
+    }
+    
+    // Remove answer key section from questions text
+    const answerKeyIndex = questionsText.search(/ANSWER KEY:|Answers?:/i);
+    if (answerKeyIndex > -1) {
+      questionsText = questionsText.substring(0, answerKeyIndex);
+    }
+    
+    // Parse questions based on type
+    switch(type.toLowerCase()) {
+      case 'mcq':
+        parseMCQQuestions(questionsText, worksheet);
+        break;
+      case 'truefalse':
+        parseTrueFalseQuestions(questionsText, worksheet);
+        break;
+      case 'fillinblanks':
+        parseFillInBlanksQuestions(questionsText, worksheet);
+        break;
+      case 'quiz':
+      case 'short':
+      case 'descriptive':
+      default:
+        parseGeneralQuestions(questionsText, worksheet);
+        break;
+    }
+    
+    // Parse answer key
+    parseAnswerKey(text, worksheet);
+    
+    console.log(`Parsed ${level} worksheet:`, worksheet);
+    return worksheet;
+  };
+
+  // Helper function for MCQ questions
+  const parseMCQQuestions = (questionsText, worksheet) => {
+    const questionBlocks = questionsText.split(/\n(?=\d+\.)/);
+    
+    questionBlocks.forEach(block => {
+      const lines = block.split('\n').filter(line => line.trim());
       if (lines.length === 0) return;
       
-      const questionText = lines[0].trim();
-      const question = {
-        id: index + 1,
-        text: questionText,
-        answer: "Answer not found"
-      };
+      const firstLine = lines[0];
+      const questionMatch = firstLine.match(/^(\d+)\.\s*(.+)/);
       
-      // Check if it's a multiple choice question
-      if (questionText.includes('?') || questionText.includes(':')) {
-        const options = [];
+      if (questionMatch && questionMatch[2]) {
+        const question = {
+          id: parseInt(questionMatch[1]),
+          text: questionMatch[2].trim(),
+          options: [],
+          answer: "Answer not found",
+          type: 'mcq'
+        };
+        
+        // Extract options (a), b), c), d))
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i].trim();
-          if (line.match(/^[a-d]\)/)) {
-            options.push(line);
-          } else if (line.startsWith('**Answer Key:**')) {
+          const optionMatch = line.match(/^([a-d])[\)\.]\s*(.+)/i);
+          if (optionMatch) {
+            question.options.push(`${optionMatch[1].toUpperCase()}) ${optionMatch[2].trim()}`);
+          }
+          // Stop if we hit marks indicator or next question
+          if (line.match(/\[Marks:|Marks:/) || line.match(/^\d+\./)) {
             break;
           }
         }
-        if (options.length > 0) {
-          question.options = options;
-        }
-      }
-      
-      worksheet.questions.push(question);
-    });
-    
-    // Try to extract answers from answer key
-    const answerKeyIndex = text.indexOf('**Answer Key:**');
-    if (answerKeyIndex !== -1) {
-      const answerSection = text.substring(answerKeyIndex);
-      const answerLines = answerSection.split('\n');
-      
-      answerLines.forEach((line, idx) => {
-        if (idx === 0) return; // Skip the "Answer Key" header
         
-        const answerMatch = line.match(/(\d+)\.\s*(.*)/);
+        worksheet.questions.push(question);
+      }
+    });
+  };
+
+  // Helper function for True/False questions
+  const parseTrueFalseQuestions = (questionsText, worksheet) => {
+    const questions = questionsText.match(/\d+\.\s*([^\n]+)/g) || [];
+    
+    questions.forEach((q, index) => {
+      const match = q.match(/^(\d+)\.\s*(.+)/);
+      if (match && match[2]) {
+        worksheet.questions.push({
+          id: parseInt(match[1]) || index + 1,
+          text: match[2].trim(),
+          type: 'truefalse',
+          answer: "Answer not found"
+        });
+      }
+    });
+  };
+
+  // Helper function for Fill in the Blanks questions
+  const parseFillInBlanksQuestions = (questionsText, worksheet) => {
+    const questions = questionsText.match(/\d+\.\s*([^\n]+)/g) || [];
+    
+    questions.forEach((q, index) => {
+      const match = q.match(/^(\d+)\.\s*(.+)/);
+      if (match && match[2]) {
+        worksheet.questions.push({
+          id: parseInt(match[1]) || index + 1,
+          text: match[2].trim(),
+          type: 'fillinblanks',
+          answer: "Answer not found"
+        });
+      }
+    });
+  };
+
+  // Helper function for general questions
+  const parseGeneralQuestions = (questionsText, worksheet) => {
+    const questions = questionsText.match(/\d+\.\s*([^\n]+(?:\n(?!\d+\.)[^\n]*)*)/g) || [];
+    
+    questions.forEach((q, index) => {
+      const match = q.match(/^(\d+)\.\s*(.+)/s);
+      if (match && match[2]) {
+        worksheet.questions.push({
+          id: parseInt(match[1]) || index + 1,
+          text: match[2].trim(),
+          type: worksheet.type,
+          answer: "Answer not found"
+        });
+      }
+    });
+  };
+
+  // Helper function to parse answer key
+  const parseAnswerKey = (text, worksheet) => {
+    const answerKeyMatch = text.match(/ANSWER KEY:\s*(.+?)(?=\n*$)/is);
+    if (!answerKeyMatch) return;
+    
+    const answerText = answerKeyMatch[1];
+    const answers = answerText.split('\n').filter(line => line.trim());
+    
+    answers.forEach(line => {
+      // Try multiple patterns for answer extraction
+      const patterns = [
+        /^(\d+)\.?\s*[:-\s]?\s*(.+)/i,
+        /^(\d+)\s*-\s*(.+)/i,
+        /^Q?(\d+)\s*(.+)/i
+      ];
+      
+      for (const pattern of patterns) {
+        const answerMatch = line.match(pattern);
         if (answerMatch && answerMatch[1] && answerMatch[2]) {
           const questionNum = parseInt(answerMatch[1]);
-          if (worksheet.questions[questionNum - 1]) {
-            worksheet.questions[questionNum - 1].answer = answerMatch[2].trim();
+          const answer = answerMatch[2].trim();
+          
+          // Find the corresponding question
+          const question = worksheet.questions.find(q => q.id === questionNum);
+          if (question) {
+            question.answer = answer;
+            break;
           }
         }
-      });
-    }
+      }
+    });
     
-    return worksheet;
+    // If answers still not found, try alternative parsing
+    if (worksheet.questions.some(q => q.answer === "Answer not found")) {
+      parseAlternativeAnswers(text, worksheet);
+    }
+  };
+
+  // Alternative answer parsing for different formats
+  const parseAlternativeAnswers = (text, worksheet) => {
+    const lines = text.split('\n');
+    let inAnswerSection = false;
+    
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.toLowerCase().includes('answer key') || 
+          trimmedLine.toLowerCase().includes('answers:')) {
+        inAnswerSection = true;
+        return;
+      }
+      
+      if (inAnswerSection) {
+        const answerMatch = trimmedLine.match(/(\d+)\.?\s*[:-\s]?\s*(.+)/i);
+        if (answerMatch && answerMatch[1] && answerMatch[2]) {
+          const questionNum = parseInt(answerMatch[1]);
+          const answer = answerMatch[2].trim();
+          
+          const question = worksheet.questions.find(q => q.id === questionNum);
+          if (question) {
+            question.answer = answer;
+          }
+        }
+      }
+    });
   };
 
   const handleGenerate = async () => {
@@ -124,7 +268,8 @@ const WorksheetGenerator = () => {
       const parsedWorksheets = {};
       if (worksheetsData.worksheets) {
         Object.keys(worksheetsData.worksheets).forEach(level => {
-          parsedWorksheets[level] = parseWorksheetText(worksheetsData.worksheets[level], level);
+          const parsed = parseWorksheetText(worksheetsData.worksheets[level], level, worksheetType);
+          parsedWorksheets[level] = parsed;
         });
       }
       
@@ -158,7 +303,16 @@ const WorksheetGenerator = () => {
     doc.setFontSize(12);
     doc.text(`Type: ${worksheetType.toUpperCase()} | Level: ${level.toUpperCase()}`, 105, 25, { align: 'center' });
 
+    // Instructions if available
     let yPosition = 40;
+    if (worksheet.instructions) {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      const instructions = doc.splitTextToSize(`Instructions: ${worksheet.instructions}`, 170);
+      doc.text(instructions, 20, yPosition);
+      yPosition += instructions.length * 6 + 10;
+      doc.setTextColor(0, 0, 0);
+    }
 
     worksheet.questions.forEach((q, index) => {
       if (yPosition > 250) {
@@ -172,23 +326,33 @@ const WorksheetGenerator = () => {
       doc.text(splitText, 20, yPosition);
       yPosition += splitText.length * 7;
 
-      if (worksheetType === 'mcq' && q.options) {
-        q.options.forEach((option, optIndex) => {
-          doc.text(`   ${String.fromCharCode(65 + optIndex)}) ${option}`, 20, yPosition);
+      // Add options for MCQ
+      if (worksheetType === 'mcq' && q.options && q.options.length > 0) {
+        q.options.forEach((option) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(`   ${option}`, 20, yPosition);
           yPosition += 7;
         });
       }
 
       yPosition += 7;
 
+      // Add answers if requested
       if (withAnswers) {
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
         doc.setFontSize(10);
         doc.setTextColor(0, 128, 0);
         const answerText = `Answer: ${q.answer}`;
         const splitAnswer = doc.splitTextToSize(answerText, 170);
         doc.text(splitAnswer, 20, yPosition);
         doc.setTextColor(0, 0, 0);
-        yPosition += splitAnswer.length * 7;
+        yPosition += splitAnswer.length * 7 + 5;
       }
     });
 
@@ -202,11 +366,11 @@ const WorksheetGenerator = () => {
   const renderQuestion = (q, index) => (
     <div key={index} className="question-item">
       <p><strong>Q{index + 1}:</strong> {q.text}</p>
-      {worksheetType === 'mcq' && q.options && (
+      {worksheetType === 'mcq' && q.options && q.options.length > 0 && (
         <div className="options-list">
           {q.options.map((option, optIndex) => (
             <div key={optIndex} className="option-item">
-              {String.fromCharCode(65 + optIndex)}) {option}
+              {option}
             </div>
           ))}
         </div>
@@ -269,8 +433,8 @@ const WorksheetGenerator = () => {
                 <option value="quiz">Quick Quiz</option>
                 <option value="descriptive">Descriptive Test</option>
                 <option value="short">Short Answers</option>
-                <option value="FillInBlanks">Fill in the blanks</option>
-                <option value="TrueFalse">True/False</option>
+                <option value="fillinblanks">Fill in the blanks</option>
+                <option value="truefalse">True/False</option>
               </select>
             </div>
 
@@ -356,9 +520,23 @@ const WorksheetGenerator = () => {
               </div>
             </div>
             
+            {generatedWorksheets[activeLevel].instructions && (
+              <div className="instructions-section">
+                <h3>Instructions</h3>
+                <p>{generatedWorksheets[activeLevel].instructions}</p>
+              </div>
+            )}
+            
             <div className="worksheet-content">
-              {generatedWorksheets[activeLevel].questions.map((question, index) => 
-                renderQuestion(question, index)
+              {generatedWorksheets[activeLevel].questions.length > 0 ? (
+                generatedWorksheets[activeLevel].questions.map((question, index) => 
+                  renderQuestion(question, index)
+                )
+              ) : (
+                <div className="no-questions">
+                  <p>No questions could be parsed from the generated worksheet.</p>
+                  <p>Please try generating again or check the console for details.</p>
+                </div>
               )}
             </div>
           </div>
@@ -585,6 +763,24 @@ const WorksheetGenerator = () => {
           flex-wrap: wrap;
         }
         
+        .instructions-section {
+          background: #e3f2fd;
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          border-left: 4px solid #2196F3;
+        }
+        
+        .instructions-section h3 {
+          margin: 0 0 8px 0;
+          color: #1976d2;
+        }
+        
+        .instructions-section p {
+          margin: 0;
+          color: #555;
+        }
+        
         .view-answers-btn {
           background: #2196F3;
           color: white;
@@ -677,6 +873,14 @@ const WorksheetGenerator = () => {
           margin: 0;
           color: #2e7d32;
           font-weight: 600;
+        }
+        
+        .no-questions {
+          text-align: center;
+          padding: 40px;
+          color: #666;
+          background: #f9f9f9;
+          border-radius: 6px;
         }
         
         @media (max-width: 768px) {

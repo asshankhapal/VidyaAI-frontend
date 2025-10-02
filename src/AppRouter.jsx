@@ -9,6 +9,7 @@ import InstantKBmode from "./components/InstantKnowledgeMode/InstantKBmode";
 import ProfileDetails from "./components/ShowProfile/ProfileDetails";
 import EduVisualAidGenerator from "./components/VisualAid/VisualAid";
 import WorksheetGenerator from "./components/Worksheets/Worksheet";
+import RuralTeacherPlanner from "./components/WeaklyPlanner/WeaklyPlanner";
 
 
 
@@ -25,6 +26,7 @@ const AppRouter = () => {
         <Route path="/profile" element={ <ProtectedRoute> <ProfileDetails /></ProtectedRoute>}/>
         <Route path="/visual-aid" element={ <ProtectedRoute> <EduVisualAidGenerator /></ProtectedRoute>}/>
         <Route path="/worksheet" element={ <ProtectedRoute> <WorksheetGenerator /></ProtectedRoute>}/>
+        <Route path="/planner" element={ <ProtectedRoute> <RuralTeacherPlanner /></ProtectedRoute>}/>
       </Routes>
     </BrowserRouter>
   );
